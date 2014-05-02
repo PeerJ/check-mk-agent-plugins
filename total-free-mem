@@ -1,0 +1,43 @@
+#!/bin/bash
+DEFAULT_WARNING=500
+DEFAULT_CRITICAL=200
+while getopts "h" opt; do
+  case $opt in
+    h)
+      echo "Usage: $0 will alert if total memory is below warning $DEFAULT_WARNING or critical $DEFAULT_CRITICAL"
+      echo "Optionally, you can symlink to $0_WARNING_CRITICAL where params are in mb (e.g. $0_"$DEFAULT_WARNING"_"$DEFAULT_CRITICAL")"
+      exit 3
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      ;;
+  esac
+done
+
+
+PHYSICAL=`free -m | grep "buffers/cache:" | awk '{ print $4 }'`
+SWAP=`free -m | grep "Swap:" | awk '{ print $2 }'`
+TOTAL=`expr $PHYSICAL + $SWAP`
+STATUS=3
+MSG="UNKNOWN"
+
+WARNING=`echo $0 | awk -F'_' '{print $2}'`
+CRITICAL=`echo $0 | awk -F'_' '{print $3}'`
+if [ "$WARNING" == "" ]; then
+  WARNING=$DEFAULT_WARNING
+fi
+if [ "$CRITICAL" == "" ]; then
+  CRITICAL=$DEFAULT_CRITICAL
+fi
+
+if [ "$TOTAL" -lt "$CRITICAL" ]; then
+  STATUS=2
+  MSG="CRITICAL - There is only $TOTAL MB of total memory left (swap + free buffers) [$WARNING/$CRITICAL alerts]"
+elif [ "$TOTAL" -lt "$WARNING" ]; then
+  STATUS=1
+  MSG="WARNING - There is only $TOTAL MB of total memory left (swap + free buffers) [$WARNING/$CRITICAL alerts]"
+else
+  STATUS=0
+  MSG="OK - Total memory free ($TOTAL) is adequate (swap + free buffers) [$WARNING/$CRITICAL alerts]"
+fi
+echo $STATUS total_free_mem total_free_mem=$TOTAL $MSG

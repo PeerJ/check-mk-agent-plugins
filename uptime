@@ -1,0 +1,42 @@
+#!/bin/bash
+
+DEFAULT_WARNING=`expr 60 \* 24` # 24 hours
+DEFAULT_CRITICAL=`expr 30` # 30 min
+while getopts "h" opt; do
+  case $opt in
+    h)
+      echo "Usage: $0 will alert if uptime is below warning $DEFAULT_WARNING or critical $DEFAULT_CRITICAL minutes"
+      echo "Optionally, you can symlink to $0_WARNING_CRITICAL where params are in minutes (e.g. $0_"$DEFAULT_WARNING"_"$DEFAULT_CRITICAL")"
+      exit 3
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      ;;
+  esac
+done
+
+WARNING=`echo $0 | awk -F'_' '{print $2}'`
+CRITICAL=`echo $0 | awk -F'_' '{print $3}'`
+if [ "$WARNING" == "" ]; then
+  WARNING=$DEFAULT_WARNING
+fi
+if [ "$CRITICAL" == "" ]; then
+  CRITICAL=$DEFAULT_CRITICAL
+fi
+
+UPTIME_SEC=`cat /proc/uptime | awk '{ print $1 }' | awk -F. '{ print $1 }'`
+UPTIME=`expr $UPTIME_SEC / 60`
+STATUS=3
+MSG="UNKNOWN"
+
+if [ "$UPTIME" -lt "$CRITICAL" ]; then
+  STATUS=2
+  MSG="CRITICAL - Uptime less than $CRITICAL min ($UPTIME min) [$WARNING/$CRITICAL alerts]"
+elif [ "$UPTIME" -lt "$WARNING" ]; then
+  STATUS=1
+  MSG="WARNING - Uptime less than $WARNING min ($UPTIME min) [$WARNING/$CRITICAL alerts]"
+else
+  STATUS=0
+  MSG="OK - Uptime OK ($UPTIME min) [$WARNING/$CRITICAL alerts]"
+fi
+echo $STATUS uptime_check uptime=$UPTIME $MSG

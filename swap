@@ -1,0 +1,28 @@
+#!/bin/bash
+
+while getopts "h" opt; do
+  case $opt in
+    h)
+      echo "Usage: $0 will alert if swap is not present"
+      exit 3
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      ;;
+  esac
+done
+
+
+SWAP=`cat /proc/swaps | wc -l`
+STATUS=3
+MSG="UNKNOWN"
+SIZE=0
+if [ "$SWAP" == "1" ]; then
+  STATUS=2
+  MSG="CRITICAL - No swap file present"
+else
+  STATUS=0
+  MSG="OK - Swap file present"
+  SIZE=`cat /proc/swaps | tail --lines=+2 | awk '{print $3}'`
+fi
+echo $STATUS swapfile swap=$SIZE $MSG

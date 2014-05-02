@@ -1,0 +1,37 @@
+#!/bin/bash
+
+DEFAULT_LEVEL=150
+while getopts "h" opt; do
+  case $opt in
+    h)
+      echo "Usage: $0 will alert if swapsize is below $DEFAULT_LEVEL percent of physical memory" 
+      echo "Optionally, you can symlink to $0_PERCENT (e.g. $0_"$DEFAULT_LEVEL")"
+      exit 3
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      ;;
+  esac
+done
+
+
+PHYSICAL=`free -m | grep "Mem:" | awk '{ print $2 }'`
+SWAP=`free -m | grep "Swap:" | awk '{ print $2 }'`
+
+LEVEL=`echo $0 | awk -F'_' '{print $2}'`
+if [ "$LEVEL" == "" ]; then
+  LEVEL=$DEFAULT_LEVEL
+fi
+PHYSICAL_MULTIPLE=`expr $PHYSICAL \* $LEVEL / 100`
+STATUS=3
+MSG="UNKNOWN"
+
+if [ "$SWAP" -lt "$PHYSICAL_MULTIPLE" ]; then
+  STATUS=2
+  MSG="CRITICAL - Swap [$SWAP] is less than $LEVEL% of physical [$PHYSICAL / $PHYSICAL_MULTIPLE]"
+else
+  STATUS=0
+  MSG="OK - Swap [$SWAP] is at least $LEVEL% of physical [$PHYSICAL / $PHYSICAL_MULTIPLE]"
+fi
+SIZE=`expr $SWAP \* 100 / $PHYSICAL`
+echo $STATUS swapsize swap_percent=$SIZE $MSG
