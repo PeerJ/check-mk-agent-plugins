@@ -18,7 +18,8 @@ done
 PHYSICAL=`free -m | grep "Mem:" | awk '{ print $2 }'`
 SWAP=`free -m | grep "Swap:" | awk '{ print $2 }'`
 
-LEVEL=`echo $0 | awk -F'_' '{print $2}'`
+BASE_NAME=`basename $0`
+LEVEL=`echo $BASE_NAME | awk -F'_' '{print $2}'`
 if [ "$LEVEL" == "" ]; then
   LEVEL=$DEFAULT_LEVEL
 fi
