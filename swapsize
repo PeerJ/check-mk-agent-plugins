@@ -24,15 +24,17 @@ if [ "$LEVEL" == "" ]; then
   LEVEL=$DEFAULT_LEVEL
 fi
 PHYSICAL_MULTIPLE=`expr $PHYSICAL \* $LEVEL / 100`
+SWAP_DIVIDED=`python -c "import math;swap=math.ceil($SWAP.0 * 100 / $LEVEL);print '%(level)d' % { 'level': swap}"`
+
 STATUS=3
 MSG="UNKNOWN"
 
-if [ "$SWAP" -lt "$PHYSICAL_MULTIPLE" ]; then
+if [ "$SWAP_DIVIDED" -lt "$PHYSICAL" ]; then
   STATUS=2
   MSG="CRITICAL - Swap [$SWAP] is less than $LEVEL% of physical [$PHYSICAL / $PHYSICAL_MULTIPLE]"
 else
   STATUS=0
-  MSG="OK - Swap [$SWAP] is at least $LEVEL% of physical [$PHYSICAL / $PHYSICAL_MULTIPLE]"
+  MSG="OK - Swap [$SWAP_DIVIDED / $SWAP] is at least $LEVEL% of physical [$PHYSICAL / $PHYSICAL_MULTIPLE]"
 fi
 SIZE=`expr $SWAP \* 100 / $PHYSICAL`
 echo $STATUS swapsize swap_percent=$SIZE $MSG
