@@ -19,12 +19,10 @@ done
 
 
 BASE_NAME=`basename $0`
-echo $BASE_NAME
 FOLDER=`echo $BASE_NAME | awk -F'_' 'BEGIN { OFS = "/" } ; {$1="";print $0}'`
 if [ "$FOLDER" == "" ]; then
   FOLDER=$DEFAULT_FOLDER
 fi
-echo $FOLDER
 OWNED_FILES=`find $FOLDER -user root | wc -l`
 STATUS=3
 MSG="UNKNOWN"
