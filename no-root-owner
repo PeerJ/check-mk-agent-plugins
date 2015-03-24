@@ -1,0 +1,39 @@
+#!/bin/bash
+
+DEFAULT_FOLDER="/home"
+while getopts "hf:" opt; do
+  case $opt in
+    f)
+      DEFAULT_FOLDER="$OPTARG"
+      ;;
+    h)
+      echo "Usage: $0 [-f folder=$DEFAULT_FOLDER] will alert if any files in a folder are owned by root"
+      echo "Symlink as $0_folder_folder to depth of 2 (max)"
+      exit 3
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      ;;
+  esac
+done
+
+
+BASE_NAME=`basename $0`
+echo $BASE_NAME
+FOLDER=`echo $BASE_NAME | awk -F'_' 'BEGIN { OFS = "/" } ; {$1="";print $0}'`
+if [ "$FOLDER" == "" ]; then
+  FOLDER=$DEFAULT_FOLDER
+fi
+echo $FOLDER
+OWNED_FILES=`find $FOLDER -user root | wc -l`
+STATUS=3
+MSG="UNKNOWN"
+
+if [ "$OWNED_FILES" -gt 0 ]; then
+  STATUS=2
+  MSG="CRITICAL - $FOLDER has $OWNED_FILES owned by root"
+else
+  STATUS=0
+  MSG="OK - root doesn't own any files in $FOLDER"
+fi
+echo $STATUS no_root_owned owned_files=$OWNED_FILES $MSG
