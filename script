@@ -1,0 +1,44 @@
+#!/bin/bash
+
+CRIT=0
+NAME=script
+while getopts "n:ch" opt; do
+  case $opt in
+    n)
+      NAME=$OPTARG
+      ;;
+    c)
+      CRIT=1
+      ;;
+    h)
+      echo "Usage: $0 [-c critical] [-n check_mk_name] return_code [description]"
+      exit 3
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      ;;
+  esac
+done
+shift $(($OPTIND -1))
+CODE=$1
+DESCR=$2
+if [ "$CODE" == "" ]; then
+  echo "See $0 -h"
+  exit 1
+fi
+
+STATUS=3
+MSG="UNKNOWN"
+if [ "$CODE" == "0" ]; then
+  STATUS=0
+  MSG="OK - $DESCR"
+else
+  if [ "$CRIT" == "1" ]; then
+    STATUS=2
+    MSG="CRITICAL - $DESCR"
+  else
+    STATUS=1
+    MSG="WARNING - $DESCR"
+  fi
+fi
+echo $STATUS script code=$CODE $MSG
