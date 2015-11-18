@@ -1,0 +1,28 @@
+#!/bin/bash
+
+while getopts "h" opt; do
+  case $opt in
+    h)
+      echo "Usage: $0 will alert if unable to connect to redis on localhost" 
+      exit 3
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      ;;
+  esac
+done
+
+
+OK_FOUND=`echo "quit" | nc -q 1 -t -w 1 localhost 6379 | grep "+OK" | wc -l`
+
+STATUS=3
+MSG="UNKNOWN"
+
+if [ "$OK_FOUND" != "1" ]; then
+  STATUS=2
+  MSG="CRITICAL - Unable to connect to redis on localhost"
+else
+  STATUS=0
+  MSG="OK - Able to connect to redis on localhost"
+fi
+echo $STATUS redis status=$STATUS $MSG
